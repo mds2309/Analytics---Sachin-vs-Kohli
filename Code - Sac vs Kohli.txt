@@ -1,0 +1,84 @@
+import warnings
+warnings.filterwarnings('ignore')
+
+import pandas as pd
+import numpy as np
+
+import matplotlib.pyplot as plt
+
+#to display all rows and columns
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.expand_frame_repr', False)
+pd.set_option('max_colwidth', -1)
+
+df = pd.read_csv("C:\\Users\mds23\Downloads\ODI_data.csv")  ##Reading the CSV File
+
+newdf = df[df.columns.drop(["Innings Runs Scored", "Innings Minutes Batted", "Innings Batted Flag", "Innings Not Out Flag", "Innings Number", "Opposition", "Ground", "Innings Runs Scored Buckets", "Innings Overs Bowled", "Innings Bowled Flag", "Innings Maidens Bowled", "Innings Runs Conceded", "Innings Wickets Taken", "4 Wickets", "5 Wickets", "10 Wickets", "Innings Wickets Taken Buckets", "Innings Economy Rate"])]
+## The above command drops the unwanted columns
+## print(newdf.head(2))
+## print(len(newdf.columns))
+
+## print(newdf["Innings Runs Scored Num"].unique()) ## To know the uniqe values and know "-" and "nan"
+
+newdf = newdf[newdf["Innings Runs Scored Num"] != '-'] ## To remove rows with '-'
+newdf = newdf.dropna(subset = ["Innings Runs Scored Num"])  ## To drop "nan"
+
+newdf["Innings Date"] = pd.to_datetime(newdf["Innings Date"])  ##This converts the particular column to date type
+newdf["Year"] = newdf["Innings Date"].dt.year ##This adds column year extracted from the column date
+# print(newdf.head(2))
+
+## To get integer format for below columns:
+newdf["Innings Runs Scored Num"] = newdf["Innings Runs Scored Num"].astype('int')
+newdf["Innings Balls Faced"] = newdf["Innings Balls Faced"].astype('int')
+newdf["50's"] = newdf["50's"].astype('int')
+newdf["100's"] = newdf["100's"].astype('int')
+
+## To get data set with Sachin period 1994 - 2004
+sachindf = newdf[(newdf.Year >= 1994) & (newdf.Year <= 2004)]
+##print(sachindf.tail(2))
+##print(sachindf.dtypes) # To print data types of columns
+
+## To get data ser with Kohli period 2009 - 2019
+kohlidf = newdf[(newdf.Year >= 2009) & (newdf.Year <= 2019)]
+##print(kohlidf.tail(2))
+
+## sachindf.to_csv('Sachin.csv') -- To export csv file with sachin data
+## kohlidf.to_csv('Kohli.csv') -- To export csv file with sachin data
+
+## print(sachindf["Innings Player"].unique())
+
+sdf = sachindf[sachindf["Innings Player"] == "SR Tendulkar"]
+#print(sdf.tail(10))  ## This gives only sachin innings data set
+
+#print(kohlidf["Innings Player"].unique())
+
+kdf = kohlidf[kohlidf["Innings Player"] == "V Kohli"]
+#print(kdf.head(10))
+
+sachin_runs = sum(sdf["Innings Runs Scored Num"])
+print ("Total Runs by Sachin during 1994 to 2004 is ", sachin_runs)
+#print ("Total Innings played by Sachin during the said time is ", len(sdf))
+print ("Runs per Innings by Sachin is ", sachin_runs/len(sdf))
+sachin_balls_faced = sum(sdf["Innings Balls Faced"])
+print ("Strike rate of Sachin is", 100*(sachin_runs/sachin_balls_faced))
+print ("No of 100's scored by Sachin = ", sum(sdf["100's"]))
+print ("No of 50's scored by Sachin = ", sum(sdf["50's"]))
+India_players_runs_sdf = sum(sachindf[sachindf.Country == "India"]["Innings Runs Scored Num"])
+#print ("Runs scored by Team India Players during same period = ", India_players_runs_sdf)
+print ("Team contribution during the said period = ", 100*(sachin_runs/India_players_runs_sdf), "%")
+
+kohli_runs = sum(kdf["Innings Runs Scored Num"])
+print ("\nTotal Runs by Kohli during 2009 to 2019 is ", kohli_runs)
+#print ("Total Innings played by Kohli during the said time is ", len(kdf))
+print ("Runs per Innings by Kohli is ", kohli_runs/len(kdf))
+kohli_balls_faced = sum(kdf["Innings Balls Faced"])
+print ("Strike rate of Kohli is", 100*(kohli_runs/kohli_balls_faced))
+print ("No of 100's scored by Kohli = ", sum(kdf["100's"]))
+print ("No of 50's scored by Kohli = ", sum(kdf["50's"]))
+India_players_runs_kdf = sum(kohlidf[kohlidf.Country == "India"]["Innings Runs Scored Num"])
+#print ("Runs scored by Team India Players during same period = ", India_players_runs_kdf)
+print ("Team contribution during the said period = ", 100*(kohli_runs/India_players_runs_kdf), "%")
+
+bar_graph1 = sachindf.groupby(["Innings Player"])["Innings Runs Scored Num"].sum().sort_values(ascending=False).head(10).plot(kind='bar')
+plt.show()
